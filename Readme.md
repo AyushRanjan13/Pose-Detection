@@ -1,9 +1,19 @@
+
 # 🎯 PoseVision - Real-Time Pose Detection System
 
 
 A real-time human pose detection application that uses machine learning to track body movements through your webcam. Built with p5.js and ml5.js for an interactive and visually appealing experience.
 
 ---
+
+🌐 Live Demo
+
+🚀 Try PoseVision Live Here → https://ayushranjan13.github.io/Pose-Detection/
+
+Experience real-time AI-powered pose detection directly in your browser! No installation required - just allow camera access and start moving.
+
+Note: Best experienced on desktop/laptop with a good webcam and lighting.
+
 
 ## 📋 Table of Contents
 
@@ -321,5 +331,3 @@ posevision/
 - [Official Documentation](https://learn.ml5js.org/)
 - [PoseNet Reference](https://learn.ml5js.org/#/reference/posenet)
 - [ml5.js](https://ml5js.org/)
-
----
