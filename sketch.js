@@ -1,6 +1,5 @@
-// Enhanced PoseNet with Professional UI and Animations
 let posenet;
-let singlePose, skeleton;
+let allPoses = [];  // Store all detected poses (multiple people)
 let capture;
 
 // Animation variables
@@ -52,15 +51,15 @@ function setup() {
 }
 
 function receivedPoses(poses) {
+  // Store all detected poses (all people in frame)
+  allPoses = poses;
+  
+  // Store keypoint history for smooth animations (from first person)
   if (poses.length > 0) {
-    singlePose = poses[0].pose;
-    skeleton = poses[0].skeleton;
-    
-    // Store keypoint history for smooth animations
     if (keypointHistory.length >= maxHistory) {
       keypointHistory.shift();
     }
-    keypointHistory.push(JSON.parse(JSON.stringify(singlePose.keypoints)));
+    keypointHistory.push(JSON.parse(JSON.stringify(poses[0].pose.keypoints)));
   }
 }
 
@@ -83,10 +82,14 @@ function draw() {
   // Draw animated particles
   drawParticles();
   
-  // Draw pose detection with scaled coordinates
-  if (singlePose) {
-    drawKeypoints(scaleX, scaleY);  // Draw keypoints with scale factors
-    drawSkeleton(scaleX, scaleY);   // Draw skeleton lines with scale factors
+  // Draw pose detection for ALL people with scaled coordinates
+  for (let i = 0; i < allPoses.length; i++) {
+    let pose = allPoses[i].pose;
+    let skeleton = allPoses[i].skeleton;
+    
+    // Draw keypoints and skeleton for each person
+    drawKeypoints(pose, scaleX, scaleY);
+    drawSkeleton(skeleton, scaleX, scaleY);
   }
   
   // Draw UI overlay
@@ -131,10 +134,10 @@ function drawParticles() {
   }
 }
 
-function drawSkeleton(scaleX, scaleY) {
+function drawSkeleton(skeleton, scaleX, scaleY) {
   // Draw skeleton with scaled coordinates - GREEN
   stroke(0, 255, 100);  // Green color
-  strokeWeight(5);       // Same as sketch.js
+  strokeWeight(5);
   for (let j = 0; j < skeleton.length; j++) {
     let x1 = skeleton[j][0].position.x * scaleX;
     let y1 = skeleton[j][0].position.y * scaleY;
@@ -144,13 +147,13 @@ function drawSkeleton(scaleX, scaleY) {
   }
 }
 
-function drawKeypoints(scaleX, scaleY) {
+function drawKeypoints(pose, scaleX, scaleY) {
   // Draw keypoints with scaled coordinates - GREEN, smaller size
   fill(0, 255, 100);  // Green color
   noStroke();  // No stroke on dots
-  for (let i = 0; i < singlePose.keypoints.length; i++) {
-    let x = singlePose.keypoints[i].position.x * scaleX;
-    let y = singlePose.keypoints[i].position.y * scaleY;
+  for (let i = 0; i < pose.keypoints.length; i++) {
+    let x = pose.keypoints[i].position.x * scaleX;
+    let y = pose.keypoints[i].position.y * scaleY;
     ellipse(x, y, keypointConfig.size);
   }
 }
@@ -162,8 +165,8 @@ function drawUIOverlay() {
   push();
   
   // Status indicator
-  let statusText = singlePose ? "Pose Detected" : "Waiting for Pose...";
-  let statusColor = singlePose ? [100, 255, 100] : [255, 200, 100];
+  let statusText = allPoses.length > 0 ? `${allPoses.length} Person${allPoses.length > 1 ? 's' : ''} Detected` : "Waiting for Pose...";
+  let statusColor = allPoses.length > 0 ? [100, 255, 100] : [255, 200, 100];
   
   // Status badge
   fill(0, 0, 0, 150);
@@ -193,21 +196,31 @@ function drawUIOverlay() {
   fill(200, 200, 200, 180);
   text("Real-time Pose Detection", 10, height - 30);
   
-  // Keypoint count
-  if (singlePose) {
-    let visibleKeypoints = singlePose.keypoints.filter(
-      kp => kp.score > keypointConfig.minConfidence
-    ).length;
+  // Keypoint count and people count
+  if (allPoses.length > 0) {
+    // Count total visible keypoints across all people
+    let totalVisibleKeypoints = 0;
+    for (let i = 0; i < allPoses.length; i++) {
+      let visibleKeypoints = allPoses[i].pose.keypoints.filter(
+        kp => kp.score > keypointConfig.minConfidence
+      ).length;
+      totalVisibleKeypoints += visibleKeypoints;
+    }
     
     fill(0, 0, 0, 150);
     noStroke();
-    rect(width - 150, 10, 140, 30, 8);
+    rect(width - 200, 10, 190, 50, 8);
     
     fill(255, 255, 255);
     textSize(12);
     textAlign(RIGHT, CENTER);
-    text(`Keypoints: ${visibleKeypoints}/17`, width - 20, 25);
+    text(`People: ${allPoses.length}`, width - 20, 25);
+    text(`Keypoints: ${totalVisibleKeypoints}`, width - 20, 40);
   }
   
   pop();
+
+  //image(specs,singlePose.nose.x-35,singlePose.nose.y-50,80,80);
+  //image(smoke,singlePose.nose.x-35,singlePose.nose.y+10,40,40);
+
 }
